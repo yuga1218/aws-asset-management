@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>備品管理システム</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f6f8;
+            color: #333;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .summary {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            flex: 1;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #ecf0f1;
+        }
+
+        .status {
+            color: #27ae60;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>備品管理システム</h1>
+        <p>社内備品の管理・利用状況を確認できます。</p>
+    </header>
+
+    <main>
+        <section class="summary">
+            <div class="card">
+                <h2>登録備品数</h2>
+                <p class="number">12</p>
+            </div>
+
+            <div class="card">
+                <h2>利用中</h2>
+                <p class="number">8</p>
+            </div>
+
+            <div class="card">
+                <h2>未使用</h2>
+                <p class="number">4</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>備品一覧</h2>
+
+            <div>
+                <label for="searchInput">備品検索:</label>
+                <input type="text" id="searchInput" placeholder="備品名・管理番号で検索">
+            </div>
+
+         　 <div>
+                <label for="assetName">備品名:</label>
+                <input type="text" id="assetName" placeholder="例:ノートPC">
+            </div>
+
+            <div>
+                <label for="assetNumber">管理番号:</label>
+                <input type="text" id="assetNumber" placeholder="例:PC-002">
+            </div>
+
+            <button id="addAssetButton">備品を追加</button>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>備品名</th>
+                        <th>管理番号</th>
+                        <th>利用者</th>
+                        <th>状態</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td>ノートPC</td>
+                        <td>PC-001</td>
+                        <td>山田太郎</td>
+                        <td class="status">利用中</td>
+                    </tr>
+
+                    <tr>
+                        <td>モニター</td>
+                        <td>MON-001</td>
+                        <td>佐藤花子</td>
+                        <td class="status">利用中</td>
+                    </tr>
+
+                    <tr>
+                        <td>キーボード</td>
+                        <td>KB-001</td>
+                        <td>未割当</td>
+                        <td>未使用</td>
+                    </tr>
+
+                    <tr>
+                        <td>マウス</td>
+                        <td>MS-001</td>
+                        <td>未割当</td>
+                        <td>未使用</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+  <script>
+    const button = document.getElementById("addAssetButton");
+
+    // 既存の備品にも削除ボタンを追加する
+    function addDeleteButton(row) {
+    const operationCell = document.createElement("td");
+
+    // 編集ボタンを作成
+    const editButton = document.createElement("button");
+    editButton.textContent = "編集";
+
+    editButton.addEventListener("click", function() {
+        // 現在の備品情報を保存
+        const originalData = [];
+
+        for (let i = 0; i < 4; i++) {
+            originalData.push(row.cells[i].textContent);
+        }
+
+        // 各セルを入力欄に変更
+        for (let i = 0; i < 4; i++) {
+            row.cells[i].innerHTML = `
+                <input type="text" value="${originalData[i]}">
+            `;
+        }
+
+        // 更新ボタンを作成
+        const updateButton = document.createElement("button");
+        updateButton.textContent = "更新";
+
+        updateButton.addEventListener("click", function() {
+            // 入力された内容を取得
+            const updatedData = [];
+
+            for (let i = 0; i < 4; i++) {
+                updatedData.push(row.cells[i].querySelector("input").value);
+            }
+
+            // 入力内容をセルに反映
+            for (let i = 0; i < 4; i++) {
+                row.cells[i].textContent = updatedData[i];
+            }
+
+            // 操作ボタンを元に戻す
+            operationCell.innerHTML = "";
+            addDeleteButton(row);
+        });
+
+        // キャンセルボタンを作成
+        const cancelButton = document.createElement("button");
+        cancelButton.textContent = "キャンセル";
+
+        cancelButton.addEventListener("click", function() {
+            // 元のデータに戻す
+            for (let i = 0; i < 4; i++) {
+                row.cells[i].textContent = originalData[i];
+            }
+
+            // 操作ボタンを元に戻す
+            operationCell.innerHTML = "";
+            addDeleteButton(row);
+        });
+
+        // 操作欄を編集用ボタンに変更
+        operationCell.innerHTML = "";
+        operationCell.appendChild(updateButton);
+        operationCell.appendChild(cancelButton);
+    });
+
+    // 削除ボタンを作成
+    const deleteButton = document.createElement("button");
+    deleteButton.textContent = "削除";
+
+    deleteButton.addEventListener("click", function() {
+        row.remove();
+    });
+
+    // 操作欄にボタンを追加
+    operationCell.appendChild(editButton);
+    operationCell.appendChild(deleteButton);
+
+    row.appendChild(operationCell);
+}
+
+    // 最初から表示されている備品に削除ボタンを追加
+    const existingRows = document.querySelectorAll("tbody tr");
+
+    existingRows.forEach(function(row) {
+        addDeleteButton(row);
+    });
+
+    // 備品追加処理
+    button.addEventListener("click", function() {
+        const assetName = document.getElementById("assetName").value;
+        const assetNumber = document.getElementById("assetNumber").value;
+
+        if (assetName === "" || assetNumber === "") {
+           alert("備品名と管理番号を入力してください！");
+           return;
+        }
+
+        const table = document.querySelector("tbody");
+
+        const row = document.createElement("tr");
+
+        const nameCell = document.createElement("td");
+        nameCell.textContent = assetName;
+
+        const numberCell = document.createElement("td");
+        numberCell.textContent = assetNumber;
+
+        const userCell = document.createElement("td");
+        userCell.textContent = "未割当";
+
+        const statusCell = document.createElement("td");
+        statusCell.textContent = "未使用";
+
+        row.appendChild(nameCell);
+        row.appendChild(numberCell);
+        row.appendChild(userCell);
+        row.appendChild(statusCell);
+
+        // 新しく追加した備品にも削除ボタンを設定
+        addDeleteButton(row);
+
+        table.appendChild(row);
+
+        document.getElementById("assetName").value = "";
+        document.getElementById("assetNumber").value = "";
+    });
+
+    const searchInput = document.getElementById("searchInput");
+
+    searchInput.addEventListener("input", function() {
+        const searchText = searchInput.value.toLowerCase();
+
+        const rows = document.querySelectorAll("tbody tr");
+
+        rows.forEach(function(row) {
+            const assetName = row.cells[0].textContent.toLowerCase();
+            const assetNumber = row.cells[1].textContent.toLowerCase();
+
+            if (assetName.includes(searchText) || assetNumber.includes(searchText)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+     });
