@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>備品管理システム</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f6f8;
+            color: #333;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
+        }
+
+        header h1 {
+            margin: 0;
+        }
+
+        main {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        .summary {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            flex: 1;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #ecf0f1;
+        }
+
+        ```savascript
+        .status {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        ```
+        
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>備品管理システム</h1>
+        <p>社内備品の管理・利用状況を確認できます。</p>
+    </header>
+
+    <main>
+        <section class="summary">
+            <div class="card">
+                <h2>登録備品数</h2>
+                <p class="number" id="totalAssets">12</p>
+            </div>
+
+            <div class="card">
+                <h2>利用中</h2>
+                <p class="number" id="inUseAssets">8</p>
+            </div>
+
+            <div class="card">
+                <h2>未使用</h2>
+                <p class="number" id="unusedAssets">4</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>備品一覧</h2>
+
+            <div>
+                <label for="searchInput">備品検索:</label>
+                <input type="text" id="searchInput" placeholder="備品名・管理番号で検索">
+            </div>
+
+         　 <div>
+                <label for="assetName">備品名:</label>
+                <input type="text" id="assetName" placeholder="例:ノートPC">
+            </div>
+
+            <div>
+                <label for="assetNumber">管理番号:</label>
+                <input type="text" id="assetNumber" placeholder="例:PC-002">
+            </div>
+
+            <button id="addAssetButton">備品を追加</button>
+
+            <!-- 並び替え機能 -->
+            <div class="sort-area">
+                <label for="sortSelect">並び替え:</label>
+                <select id="sortSelect">
+                    <option value="default">標準</option>
+                    <option value="name">備品名順</option>
+                    <option value="number">管理番号順</option>
+                    <option value="user">利用者順</option>
+                </select>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>備品名</th>
+                        <th>管理番号</th>
+                        <th>利用者</th>
+                        <th>状態</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    <tr>
+                        <td>ノートPC</td>
+                        <td>PC-001</td>
+                        <td>山田太郎</td>
+                        <td class="status">利用中</td>
+                    </tr>
+
+                    <tr>
+                        <td>モニター</td>
+                        <td>MON-001</td>
+                        <td>佐藤花子</td>
+                        <td class="status">利用中</td>
+                    </tr>
+
+                    <tr>
+                        <td>キーボード</td>
+                        <td>KB-001</td>
+                        <td>未割当</td>
+                        <td>未使用</td>
+                    </tr>
+
+                    <tr>
+                        <td>マウス</td>
+                        <td>MS-001</td>
+                        <td>未割当</td>
+                        <td>未使用</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+    </main>
+
+  <script>
+    const button = document.getElementById("addAssetButton");
+
+// ==============================
+// 1. データ保存・読み込み
+// ==============================
+
+    // 保存処理
+    function saveAssets() {
+        const assets = [];
+
+        const rows = document.querySelectorAll("table tbody tr");
+
+        rows.forEach(function(row) {
+            const asset = [];
+
+            // 各行のデータを取得
+            for (let i = 0; i < 4; i++) {
+                asset.push(row.cells[i].textContent);
+            }
+
+            // 登録順も保存
+            asset.push(Number(row.dataset.order));
+
+            assets.push(asset);
+        });
+
+        // データをJSON形式に変換して保存
+        localStorage.setItem("assets", JSON.stringify(assets));
+    }
+
+
+    // 読み込み処理
+    function loadAssets() {
+        const savedAssets = localStorage.getItem("assets");
+
+        // 保存データが存在しない場合は終了
+        if (savedAssets === null) {
+            return;
+        }
+
+        // JSON文字列をJavaScriptの配列に変換
+        const assets = JSON.parse(savedAssets);
+
+        // 現在のテーブルを空にする
+        const table = document.querySelector("tbody");
+        table.innerHTML = "";
+
+        // 保存データからテーブルを再作成
+        assets.forEach(function(asset) {
+            const row = document.createElement("tr");
+
+            // 登録順を復元
+            row.dataset.order = asset[4] ?? assetOrder;
+
+            // 次の登録順を更新
+            assetOrder = Math.max(assetOrder, Number(row.dataset.order) + 1);
+
+            for (let i = 0; i < 4; i++) {
+                const cell = document.createElement("td");
+                cell.textContent = asset[i];
+                row.appendChild(cell);
+            }
+
+            // 編集・削除ボタンを設定
+            addDeleteButton(row);
+
+            // テーブルに追加
+            table.appendChild(row);
+        });
+
+        saveAssets();
+    }
+
+
+
+// ==============================
+// 2. 備品操作関連
+// ==============================
+
+    // 備品の登録順を管理する番号
+    let assetOrder = 0;
+
+    // 備品操作関連ボタンの作成
+    function addDeleteButton(row) {
+        const operationCell = document.createElement("td");
+
+        // 操作ボタンを表示させる関数
+        function showButtons() {
+            operationCell.innerHTML = "";
+
+            // 編集ボタンを定義
+            const editButton = document.createElement("button");
+            editButton.textContent = "編集";
+
+            // 編集ボタンの操作を定義
+            editButton.addEventListener("click", function() {
+                const originalData = [];
+
+                // 現在のデータを保存
+                for (let i = 0; i < 4; i++) {
+                    originalData.push(row.cells[i].textContent);
+                }
+
+                // 備品名・管理番号を入力欄に変更
+                for (let i = 0; i < 2; i++) {
+                    const input = document.createElement("input");
+                    input.type = "text";
+                    input.value = originalData[i];
+
+                    row.cells[i].innerHTML = "";
+                    row.cells[i].appendChild(input);
+                }
+
+                // 利用者のプルダウンを作成
+                const userSelect = document.createElement("select");
+
+                const users = ["山田太郎", "佐藤花子", "未割当"];
+
+                users.forEach(function(user) {
+                    const option = document.createElement("option");
+                    option.value = user;
+                    option.textContent = user;
+
+                    userSelect.appendChild(option);
+                });
+
+                userSelect.value = originalData[2];
+
+                row.cells[2].innerHTML = "";
+                row.cells[2].appendChild(userSelect);
+
+                // 状態のプルダウンを作成
+                const statusSelect = document.createElement("select");
+
+                const statuses = ["利用中", "未使用"];
+
+                statuses.forEach(function(status) {
+                    const option = document.createElement("option");
+                    option.value = status;
+                    option.textContent = status;
+
+                    statusSelect.appendChild(option);
+                });
+
+                statusSelect.value = originalData[3];
+
+                row.cells[3].innerHTML = "";
+                row.cells[3].appendChild(statusSelect);
+
+                // 更新ボタン
+                const updateButton = document.createElement("button");
+                updateButton.textContent = "更新";
+
+                updateButton.addEventListener("click", function() {
+                    const updatedData = [];
+
+                    // 入力内容を取得
+                    updatedData.push(row.cells[0].querySelector("input").value);
+                    updatedData.push(row.cells[1].querySelector("input").value);
+                    updatedData.push(row.cells[2].querySelector("select").value);
+                    updatedData.push(row.cells[3].querySelector("select").value);
+
+
+                    // データを更新
+                    for (let i = 0; i < 4; i++) {
+                        row.cells[i].textContent = updatedData[i];
+                    }
+
+                    // データを保存
+                    saveAssets();
+
+                    // 集計情報を更新
+                    updateSummary();
+
+                    // 操作ボタンを元に戻す
+                    showButtons();
+                });
+
+                // キャンセルボタン
+                const cancelButton = document.createElement("button");
+                cancelButton.textContent = "キャンセル";
+
+                cancelButton.addEventListener("click", function() {
+                    // 元のデータに戻す
+                    for (let i = 0; i < 4; i++) {
+                        row.cells[i].textContent = originalData[i];
+                    }
+
+                    // 操作ボタンを元に戻す
+                    showButtons();
+                });
+
+                // 操作欄を編集用ボタンに変更
+                operationCell.innerHTML = "";
+                operationCell.appendChild(updateButton);
+                operationCell.appendChild(cancelButton);
+            });
+
+            // 削除ボタン
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "削除";
+
+            deleteButton.addEventListener("click", function() {
+                row.remove();
+
+                // データを保存
+                saveAssets();
+
+                // 集計情報を更新
+                updateSummary();
+
+            });
+
+            // 操作欄にボタンを追加
+            operationCell.appendChild(editButton);
+            operationCell.appendChild(deleteButton);
+        }
+
+        // 最初に編集・削除ボタンを表示
+        showButtons();
+
+        // 行に操作欄を追加
+        row.appendChild(operationCell);
+    }
+
+    // 最初から表示されている備品に削除ボタンを追加
+    const existingRows = document.querySelectorAll("tbody tr");
+
+    existingRows.forEach(function(row) {
+        row.dataset.order = assetOrder++;
+        addDeleteButton(row);
+    });
+
+
+// ==============================
+// 3. 備品追加処理
+// ==============================
+
+    // 備品追加処理
+    button.addEventListener("click", function() {
+        const assetName = document.getElementById("assetName").value;
+        const assetNumber = document.getElementById("assetNumber").value;
+
+        if (assetName === "" || assetNumber === "") {
+           alert("備品名と管理番号を入力してください！");
+           return;
+        }
+
+        const table = document.querySelector("tbody");
+
+        const row = document.createElement("tr");
+
+        row.dataset.order = assetOrder++;
+
+        const nameCell = document.createElement("td");
+        nameCell.textContent = assetName;
+
+        const numberCell = document.createElement("td");
+        numberCell.textContent = assetNumber;
+
+        const userCell = document.createElement("td");
+        userCell.textContent = "未割当";
+
+        const statusCell = document.createElement("td");
+        statusCell.textContent = "未使用";
+
+        row.appendChild(nameCell);
+        row.appendChild(numberCell);
+        row.appendChild(userCell);
+        row.appendChild(statusCell);
+
+        // 新しく追加した備品にも削除ボタンを設定
+        addDeleteButton(row);
+
+        table.appendChild(row);
+
+        // 入力欄をクリア
+        document.getElementById("assetName").value = "";
+        document.getElementById("assetNumber").value = "";
+
+        // データを保存
+        saveAssets();
+
+        // 集計情報を更新
+        updateSummary();
+
+    });
+
+// ==============================
+// 4. 検索処理
+// ==============================
+
+    const searchInput = document.getElementById("searchInput");
+
+    searchInput.addEventListener("input", function() {
+        const searchText = searchInput.value.toLowerCase();
+
+        const rows = document.querySelectorAll("tbody tr");
+
+        rows.forEach(function(row) {
+            const assetName = row.cells[0].textContent.toLowerCase();
+            const assetNumber = row.cells[1].textContent.toLowerCase();
+
+            if (assetName.includes(searchText) || assetNumber.includes(searchText)) {
+                row.style.display = "";
+            } else {
+                row.style.display = "none";
+            }
+        });
+     });
+
+// ==============================
+// 5. 初期化処理
+// ==============================
+
+    // 並び替えイベント
+    document.getElementById("sortSelect").addEventListener("change", function() {
+        sortAssets();
+    });
+
+    // 保存した備品のデータを読み込む
+    loadAssets();
+
+    // 集計情報を更新
+    updateSummary();
+
+// ==============================
+// 6. 集計処理
+// ==============================
+
+    // 備品の集計情報を更新する
+    function updateSummary() {
+        const rows = document.querySelectorAll("tbody tr");
+
+        let totalAssets = 0;
+        let inUseAssets = 0;
+        let unusedAssets = 0;
+
+        // 備品の数を集計
+        rows.forEach(function(row) {
+            totalAssets++;
+
+            const status = row.cells[3].textContent;
+
+            if (status === "利用中") {
+                inUseAssets++;
+            } else if (status === "未使用") {
+                unusedAssets++;
+            }
+        });
+
+        // 集計結果を画面に反映
+        document.getElementById("totalAssets").textContent = totalAssets;
+        document.getElementById("inUseAssets").textContent = inUseAssets;
+        document.getElementById("unusedAssets").textContent = unusedAssets;
+    }
+
+// ==============================
+// 7. 並び替え処理
+// ==============================
+
+    // 並び替え機能
+    function sortAssets() {
+        const sortSelect = document.getElementById("sortSelect");
+        const tbody = document.querySelector("table tbody");
+
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+
+        const sortType = sortSelect.value;
+
+        if (sortType === "name") {
+            rows.sort(function(a, b) {
+                return a.cells[0].textContent.localeCompare(b.cells[0].textContent, "ja");
+            });
+        } else if (sortType === "number") {
+            rows.sort(function(a, b) {
+                return a.cells[1].textContent.localeCompare(b.cells[1].textContent, "ja");
+            });
+        } else if (sortType === "user") {
+            rows.sort(function(a, b) {
+                return a.cells[2].textContent.localeCompare(b.cells[2].textContent, "ja");
+            });
+        }
+
+        //標準に戻す時の処理
+        else if (sortType === "default") {
+            rows.sort(function(a, b) {
+                return Number(a.dataset.order) - Number(b.dataset.order);
+            });
+        }
+
+        rows.forEach(function(row) {
+            tbody.appendChild(row);
+        });
+    }
+
+  </script>
