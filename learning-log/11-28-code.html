@@ -1,1 +1,36 @@
+【before_1】
+.status {
+    color: #27ae60;
+    font-weight: bold;
+}
 
+【after_1】
+.status {
+    font-weight: bold;
+}
+
+.status-in-use {
+    color: #27ae60;
+}
+
+.status-unused {
+    color: #7f8c8d;
+}
+
+
+【script_add】
+// ==============================
+// 8. 色の変更処理
+// ==============================
+
+// ステータスに応じて色を変更する関数
+function updateStatusColor(cell) {
+    cell.classList.remove("status-in-use", "status-unused");
+    cell.classList.add("status");
+
+    if (cell.textContent === "利用中") {
+        cell.classList.add("status-in-use");
+    } else if (cell.textContent === "未使用") {
+        cell.classList.add("status-unused");
+    }
+}
