@@ -1,3 +1,4 @@
+1. 
 【before_1】
 .status {
     color: #27ae60;
@@ -17,7 +18,7 @@
     color: #7f8c8d;
 }
 
-
+2. 
 【script_add】
 // ==============================
 // 8. 色の変更処理
@@ -34,3 +35,42 @@ function updateStatusColor(cell) {
         cell.classList.add("status-unused");
     }
 }
+
+3. 
+【before_3】
+for (let i = 0; i < 4; i++) {
+    const cell = document.createElement("td");
+    cell.textContent = asset[i];
+    row.appendChild(cell);
+}
+
+【after_3】
+for (let i = 0; i < 4; i++) {
+    const cell = document.createElement("td");
+    cell.textContent = asset[i];
+
+    if (i === 3) {
+        updateStatusColor(cell);
+    }
+
+    row.appendChild(cell);
+}
+
+4. 
+【script_add_4】
+addDeleteButton(row)...
+    cell.textContent = select.value;
+    // 追加部分
+    if (i === 3) {
+    updateStatusColor(cell);
+}
+    
+5. 
+【script_add_5】
+// ステータス欄を作成
+const statusCell = document.createElement("td");
+statusCell.textContent = "未使用";
+
+// ステータスに応じて色を設定
+    // 追加部分
+updateStatusColor(statusCell);
